@@ -218,17 +218,20 @@ module dmi_jtag_tap #(
   // ----------------
   logic tck_n, tck_ni;
 
-  cluster_clock_inverter i_tck_inv (
-    .clk_i ( tck_i  ),
-    .clk_o ( tck_ni )
-  );
+  //cluster_clock_inverter i_tck_inv (
+  //    .clk_i ( tck_i  ),
+  //    .clk_o ( tck_ni )
+  //);
+  assign tck_ni = ~tck_i;
 
-  pulp_clock_mux2 i_dft_tck_mux (
-    .clk0_i    ( tck_ni     ),
-    .clk1_i    ( tck_i      ), // bypass the inverted clock for testing
-    .clk_sel_i ( testmode_i ),
-    .clk_o     ( tck_n      )
-  );
+  assign tck_n = (testmode_i) ? tck_i : tck_ni;
+  // TODO: Implements process specific clock mux
+  //clock_mux2 i_dft_tck_mux (
+  //    .clk0_i    ( tck_ni     ),
+  //    .clk1_i    ( tck_i      ), // bypass the inverted clock for testing
+  //    .clk_sel_i ( testmode_i ),
+  //    .clk_o     ( tck_n      )
+  //);
 
   // TDO changes state at negative edge of TCK
   always_ff @(posedge tck_n, negedge trst_ni) begin : p_tdo_regs
