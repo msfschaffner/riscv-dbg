@@ -26,12 +26,14 @@ module dm_top #(
   parameter logic [NrHarts-1:0] SelectableHarts  = {NrHarts{1'b1}}
 ) (
   input  logic                  clk_i,       // clock
-  input  logic                  rst_ni,      // asynchronous reset active low, connect PoR here, not the system reset
+  // asynchronous reset active low, connect PoR here, not the system reset
+  input  logic                  rst_ni,
   input  logic                  testmode_i,
   output logic                  ndmreset_o,  // non-debug module reset
   output logic                  dmactive_o,  // debug module is active
   output logic [NrHarts-1:0]    debug_req_o, // async debug request
-  input  logic [NrHarts-1:0]    unavailable_i, // communicate whether the hart is unavailable (e.g.: power down)
+  // communicate whether the hart is unavailable (e.g.: power down)
+  input  logic [NrHarts-1:0]    unavailable_i,
   dm::hartinfo_t [NrHarts-1:0]  hartinfo_i,
 
   input  logic                  slave_req_i,
@@ -219,10 +221,13 @@ module dm_top #(
     assert (BusWidth == 32 || BusWidth == 64)
         else $fatal(1, "DM needs a bus width of either 32 or 64 bits");
     #0; // Avoid initial X's on hartinfo_i
-    // Fail if the DM is not located on the zero page and one hart doesn't have two scratch registers.
+    // Fail if the DM is not located at the zero page and one hart doesn't
+    // have two scratch registers.
     for (int i = 0; i < NrHarts; i++) begin
-      assert ((DmBaseAddress > 0 && hartinfo_i[i].nscratch >= 2) || (DmBaseAddress == 0 && hartinfo_i[i].nscratch >= 1))
-        else $fatal(1, "If the DM is not located at the zero page each hart needs at lest two scratch registers %d %d",i, hartinfo_i[i].nscratch );
+      assert ((DmBaseAddress > 0 && hartinfo_i[i].nscratch >= 2) ||
+              (DmBaseAddress == 0 && hartinfo_i[i].nscratch >= 1))
+          else $fatal(1, {"If the DM is not located at the zero page each hart needs ",
+                          "at lest two scratch registers %d %d"}, i, hartinfo_i[i].nscratch );
     end
   end
 `endif
